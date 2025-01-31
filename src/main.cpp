@@ -1,6 +1,7 @@
 #include <iostream>
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "utils.hpp"
 
 // Helper function to print the AST (you can enhance this later)
 void printAST(const ASTNode *node, int indent = 0)
