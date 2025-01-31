@@ -1,64 +1,84 @@
 #include <iostream>
 #include "lexer.hpp"
+#include "parser.hpp"
 
-std::string tokenTypeToString(TokenType type)
+// Helper function to print the AST (you can enhance this later)
+void printAST(const ASTNode *node, int indent = 0)
 {
-    switch (type)
+    std::string indentation(indent * 2, ' ');
+
+    switch (node->getType())
     {
-    case TokenType::INT:
-        return "INT";
-    case TokenType::FLOAT:
-        return "FLOAT";
-    case TokenType::IF:
-        return "IF";
-    case TokenType::ELSE:
-        return "ELSE";
-    case TokenType::WHILE:
-        return "WHILE";
-    case TokenType::RETURN:
-        return "RETURN";
-    case TokenType::PLUS:
-        return "PLUS";
-    case TokenType::MINUS:
-        return "MINUS";
-    case TokenType::MULTIPLY:
-        return "MULTIPLY";
-    case TokenType::DIVIDE:
-        return "DIVIDE";
-    case TokenType::ASSIGN:
-        return "ASSIGN";
-    case TokenType::EQUAL:
-        return "EQUAL";
-    case TokenType::NOT_EQUAL:
-        return "NOT_EQUAL";
-    case TokenType::LESS:
-        return "LESS";
-    case TokenType::GREATER:
-        return "GREATER";
-    case TokenType::IDENTIFIER:
-        return "IDENTIFIER";
-    case TokenType::NUMBER:
-        return "NUMBER";
-    case TokenType::LPAREN:
-        return "LPAREN";
-    case TokenType::RPAREN:
-        return "RPAREN";
-    case TokenType::LBRACE:
-        return "LBRACE";
-    case TokenType::RBRACE:
-        return "RBRACE";
-    case TokenType::SEMICOLON:
-        return "SEMICOLON";
-    case TokenType::EOF_TOKEN:
-        return "EOF";
+    case NodeType::FunctionDecl:
+    {
+        auto *func = static_cast<const FunctionDeclaration *>(node);
+        std::cout << indentation << "Function: " << func->name << std::endl;
+        printAST(func->body.get(), indent + 1);
+        break;
+    }
+    case NodeType::BlockStmt:
+    {
+        auto *block = static_cast<const BlockStatement *>(node);
+        std::cout << indentation << "Block:" << std::endl;
+        for (const auto &stmt : block->statements)
+        {
+            printAST(stmt.get(), indent + 1);
+        }
+        break;
+    }
+    case NodeType::ReturnStmt:
+    {
+        auto *ret = static_cast<const ReturnStatement *>(node);
+        std::cout << indentation << "Return:" << std::endl;
+        printAST(ret->value.get(), indent + 1);
+        break;
+    }
+    case NodeType::BinaryExpr:
+    {
+        auto *binary = static_cast<const BinaryExpression *>(node);
+        std::cout << indentation << "Binary:" << std::endl;
+        printAST(binary->left.get(), indent + 1);
+        std::cout << indentation << "  Operator: ";
+        switch (binary->op)
+        {
+        case TokenType::PLUS:
+            std::cout << "+";
+            break;
+        case TokenType::MINUS:
+            std::cout << "-";
+            break;
+        case TokenType::MULTIPLY:
+            std::cout << "*";
+            break;
+        case TokenType::DIVIDE:
+            std::cout << "/";
+            break;
+        default:
+            std::cout << "unknown";
+        }
+        std::cout << std::endl;
+        printAST(binary->right.get(), indent + 1);
+        break;
+    }
+    case NodeType::NumberExpr:
+    {
+        auto *num = static_cast<const NumberExpression *>(node);
+        std::cout << indentation << "Number: " << num->value << std::endl;
+        break;
+    }
+    case NodeType::IdentifierExpr:
+    {
+        auto *id = static_cast<const IdentifierExpression *>(node);
+        std::cout << indentation << "Identifier: " << id->name << std::endl;
+        break;
+    }
     default:
-        return "UNKNOWN";
+        std::cout << indentation << "Unknown node type" << std::endl;
     }
 }
 
 int main()
 {
-    // Test input
     std::string input = R"(
 int main() {
     int x = 42;
@@ -71,9 +91,11 @@ int main() {
 
     try
     {
+        // Lexical analysis
         Lexer lexer(input);
         auto tokens = lexer.tokenize();
 
+        std::cout << "Tokens:\n";
         for (const auto &token : tokens)
         {
             std::cout << "Token: " << tokenTypeToString(token.type)
@@ -81,6 +103,12 @@ int main() {
                       << "' | Line: " << token.line
                       << " | Column: " << token.column << std::endl;
         }
+
+        // Parsing
+        std::cout << "\nParsing AST:\n";
+        Parser parser(tokens);
+        auto ast = parser.parseFunction();
+        printAST(ast.get());
     }
     catch (const std::exception &e)
     {
