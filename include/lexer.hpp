@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -158,6 +159,8 @@ public:
             return Token(TokenType::MULTIPLY, "*", line, currentColumn);
         case '/':
             return Token(TokenType::DIVIDE, "/", line, currentColumn);
+        case '=':
+            return Token(TokenType::ASSIGN, "=", line, currentColumn);
         case '(':
             return Token(TokenType::LPAREN, "(", line, currentColumn);
         case ')':
@@ -168,19 +171,6 @@ public:
             return Token(TokenType::RBRACE, "}", line, currentColumn);
         case ';':
             return Token(TokenType::SEMICOLON, ";", line, currentColumn);
-        case '>':
-            return Token(TokenType::GREATER, ">", line, currentColumn);
-        case '=':
-        {
-            if (peek() == '=')
-            {
-                advance(); // consume second '='
-                return Token(TokenType::EQUAL, "==", line, currentColumn);
-            }
-            return Token(TokenType::ASSIGN, "=", line, currentColumn);
-        }
-        case '<':
-            return Token(TokenType::LESS, "<", line, currentColumn);
         default:
             throw std::runtime_error("Unexpected character: " + std::string(1, current));
         }
@@ -199,12 +189,3 @@ public:
         return tokens;
     }
 };
-
-// Initialize keywords map
-const std::unordered_map<std::string, TokenType> Lexer::keywords = {
-    {"int", TokenType::INT},
-    {"float", TokenType::FLOAT},
-    {"if", TokenType::IF},
-    {"else", TokenType::ELSE},
-    {"while", TokenType::WHILE},
-    {"return", TokenType::RETURN}};
