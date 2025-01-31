@@ -159,7 +159,6 @@ public:
 
     std::unique_ptr<Statement> parseFunction()
     {
-        // Expect: int main() { ... }
         consume(TokenType::INT, "Expected 'int' before function declaration");
         std::string name = consume(TokenType::IDENTIFIER, "Expected function name").value;
         consume(TokenType::LPAREN, "Expected '(' after function name");
@@ -187,16 +186,30 @@ private:
         return tokens[current++];
     }
 
+    bool check(TokenType type) const
+    {
+        if (isAtEnd())
+            return false;
+        return peek().type == type;
+    }
+
+    bool isAtEnd() const
+    {
+        return peek().type == TokenType::EOF_TOKEN;
+    }
+
     Token consume(TokenType type, const std::string &message)
     {
-        if (peek().type == type)
+        if (check(type))
             return advance();
-        throw std::runtime_error(message);
+        throw std::runtime_error(message + " at line " +
+                                 std::to_string(peek().line) + ", column " +
+                                 std::to_string(peek().column));
     }
 
     bool match(TokenType type)
     {
-        if (peek().type == type)
+        if (check(type))
         {
             advance();
             return true;
@@ -209,7 +222,7 @@ private:
         consume(TokenType::LBRACE, "Expected '{' before block");
         std::vector<std::unique_ptr<Statement>> statements;
 
-        while (!match(TokenType::RBRACE) && peek().type != TokenType::EOF_TOKEN)
+        while (!match(TokenType::RBRACE) && !isAtEnd())
         {
             statements.push_back(parseStatement());
         }
@@ -219,17 +232,15 @@ private:
 
     std::unique_ptr<Statement> parseStatement()
     {
-        if (peek().type == TokenType::RETURN)
+        if (match(TokenType::RETURN))
         {
-            advance(); // consume 'return'
             auto expr = parseExpression();
             consume(TokenType::SEMICOLON, "Expected ';' after return statement");
             return std::make_unique<ReturnStatement>(std::move(expr));
         }
 
-        if (peek().type == TokenType::IF)
+        if (match(TokenType::IF))
         {
-            advance(); // consume 'if'
             consume(TokenType::LPAREN, "Expected '(' after 'if'");
             auto condition = parseExpression();
             consume(TokenType::RPAREN, "Expected ')' after if condition");
@@ -247,9 +258,8 @@ private:
                 std::move(elseBranch));
         }
 
-        if (peek().type == TokenType::INT)
+        if (match(TokenType::INT))
         {
-            advance(); // consume 'int'
             std::string name = consume(TokenType::IDENTIFIER, "Expected variable name").value;
             consume(TokenType::ASSIGN, "Expected '=' after variable name");
             auto initializer = parseExpression();
@@ -262,49 +272,72 @@ private:
 
     std::unique_ptr<Expression> parseExpression()
     {
-        return parseTerm();
+        return parseComparison();
+    }
+
+    std::unique_ptr<Expression> parseComparison()
+    {
+        auto expr = parseTerm();
+
+        while (match(TokenType::GREATER) || match(TokenType::GREATER_EQUAL) ||
+               match(TokenType::LESS) || match(TokenType::LESS_EQUAL) ||
+               match(TokenType::EQUAL) || match(TokenType::NOT_EQUAL))
+        {
+            auto op = tokens[current - 1].type;
+            auto right = parseTerm();
+            expr = std::make_unique<BinaryExpression>(std::move(expr), op, std::move(right));
+        }
+
+        return expr;
     }
 
     std::unique_ptr<Expression> parseTerm()
     {
-        auto left = parseFactor();
+        auto expr = parseFactor();
 
-        while (peek().type == TokenType::PLUS || peek().type == TokenType::MINUS)
+        while (match(TokenType::PLUS) || match(TokenType::MINUS))
         {
-            auto op = advance().type;
+            auto op = tokens[current - 1].type;
             auto right = parseFactor();
-            left = std::make_unique<BinaryExpression>(std::move(left), op, std::move(right));
+            expr = std::make_unique<BinaryExpression>(std::move(expr), op, std::move(right));
         }
 
-        return left;
+        return expr;
     }
 
     std::unique_ptr<Expression> parseFactor()
     {
-        auto left = parsePrimary();
+        auto expr = parsePrimary();
 
-        while (peek().type == TokenType::MULTIPLY || peek().type == TokenType::DIVIDE)
+        while (match(TokenType::MULTIPLY) || match(TokenType::DIVIDE))
         {
-            auto op = advance().type;
+            auto op = tokens[current - 1].type;
             auto right = parsePrimary();
-            left = std::make_unique<BinaryExpression>(std::move(left), op, std::move(right));
+            expr = std::make_unique<BinaryExpression>(std::move(expr), op, std::move(right));
         }
 
-        return left;
+        return expr;
     }
 
     std::unique_ptr<Expression> parsePrimary()
     {
-        if (peek().type == TokenType::NUMBER)
+        if (match(TokenType::NUMBER))
         {
             return std::make_unique<NumberExpression>(
-                std::stod(advance().value));
+                std::stod(tokens[current - 1].value));
         }
 
-        if (peek().type == TokenType::IDENTIFIER)
+        if (match(TokenType::IDENTIFIER))
         {
             return std::make_unique<IdentifierExpression>(
-                advance().value);
+                tokens[current - 1].value);
+        }
+
+        if (match(TokenType::LPAREN))
+        {
+            auto expr = parseExpression();
+            consume(TokenType::RPAREN, "Expected ')' after expression");
+            return expr;
         }
 
         throw std::runtime_error("Expected expression");

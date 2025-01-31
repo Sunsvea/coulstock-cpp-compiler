@@ -3,7 +3,7 @@
 #include "parser.hpp"
 #include "utils.hpp"
 
-// Helper function to print the AST (you can enhance this later)
+// Helper function to print the AST
 void printAST(const ASTNode *node, int indent = 0)
 {
     std::string indentation(indent * 2, ' ');
@@ -34,31 +34,38 @@ void printAST(const ASTNode *node, int indent = 0)
         printAST(ret->value.get(), indent + 1);
         break;
     }
+    case NodeType::IfStmt:
+    {
+        auto *ifStmt = static_cast<const IfStatement *>(node);
+        std::cout << indentation << "If Statement:" << std::endl;
+        std::cout << indentation << "  Condition:" << std::endl;
+        printAST(ifStmt->condition.get(), indent + 2);
+        std::cout << indentation << "  Then:" << std::endl;
+        printAST(ifStmt->thenBranch.get(), indent + 2);
+        if (ifStmt->elseBranch)
+        {
+            std::cout << indentation << "  Else:" << std::endl;
+            printAST(ifStmt->elseBranch.get(), indent + 2);
+        }
+        break;
+    }
+    case NodeType::VarDecl:
+    {
+        auto *var = static_cast<const VariableDeclaration *>(node);
+        std::cout << indentation << "Variable Declaration: " << var->name << std::endl;
+        std::cout << indentation << "  Initializer:" << std::endl;
+        printAST(var->initializer.get(), indent + 2);
+        break;
+    }
     case NodeType::BinaryExpr:
     {
         auto *binary = static_cast<const BinaryExpression *>(node);
-        std::cout << indentation << "Binary:" << std::endl;
-        printAST(binary->left.get(), indent + 1);
-        std::cout << indentation << "  Operator: ";
-        switch (binary->op)
-        {
-        case TokenType::PLUS:
-            std::cout << "+";
-            break;
-        case TokenType::MINUS:
-            std::cout << "-";
-            break;
-        case TokenType::MULTIPLY:
-            std::cout << "*";
-            break;
-        case TokenType::DIVIDE:
-            std::cout << "/";
-            break;
-        default:
-            std::cout << "unknown";
-        }
-        std::cout << std::endl;
-        printAST(binary->right.get(), indent + 1);
+        std::cout << indentation << "Binary Expression:" << std::endl;
+        std::cout << indentation << "  Left:" << std::endl;
+        printAST(binary->left.get(), indent + 2);
+        std::cout << indentation << "  Operator: " << tokenTypeToString(binary->op) << std::endl;
+        std::cout << indentation << "  Right:" << std::endl;
+        printAST(binary->right.get(), indent + 2);
         break;
     }
     case NodeType::NumberExpr:
@@ -73,8 +80,6 @@ void printAST(const ASTNode *node, int indent = 0)
         std::cout << indentation << "Identifier: " << id->name << std::endl;
         break;
     }
-    default:
-        std::cout << indentation << "Unknown node type" << std::endl;
     }
 }
 
@@ -117,5 +122,4 @@ int main() {
         return 1;
     }
 
-    return 0;
-}
+    return 0
