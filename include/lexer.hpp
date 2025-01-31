@@ -25,6 +25,8 @@ enum class TokenType
     NOT_EQUAL,
     LESS,
     GREATER,
+    GREATER_EQUAL,
+    LESS_EQUAL,
 
     // Other
     IDENTIFIER,
@@ -76,6 +78,13 @@ private:
             column = 1;
         }
         return current;
+    }
+
+    char peekNext() const
+    {
+        if (position + 1 >= input.length())
+            return '\0';
+        return input[position + 1];
     }
 
     void skipWhitespace()
@@ -159,8 +168,6 @@ public:
             return Token(TokenType::MULTIPLY, "*", line, currentColumn);
         case '/':
             return Token(TokenType::DIVIDE, "/", line, currentColumn);
-        case '=':
-            return Token(TokenType::ASSIGN, "=", line, currentColumn);
         case '(':
             return Token(TokenType::LPAREN, "(", line, currentColumn);
         case ')':
@@ -171,6 +178,27 @@ public:
             return Token(TokenType::RBRACE, "}", line, currentColumn);
         case ';':
             return Token(TokenType::SEMICOLON, ";", line, currentColumn);
+        case '=':
+            if (peek() == '=')
+            {
+                advance();
+                return Token(TokenType::EQUAL, "==", line, currentColumn);
+            }
+            return Token(TokenType::ASSIGN, "=", line, currentColumn);
+        case '>':
+            if (peek() == '=')
+            {
+                advance();
+                return Token(TokenType::GREATER_EQUAL, ">=", line, currentColumn);
+            }
+            return Token(TokenType::GREATER, ">", line, currentColumn);
+        case '<':
+            if (peek() == '=')
+            {
+                advance();
+                return Token(TokenType::LESS_EQUAL, "<=", line, currentColumn);
+            }
+            return Token(TokenType::LESS, "<", line, currentColumn);
         default:
             throw std::runtime_error("Unexpected character: " + std::string(1, current));
         }
