@@ -1,6 +1,6 @@
 # Simple C++ Compiler
 
-A basic compiler implementation in C++ that supports a subset of C-like syntax. Currently implements: lexical analysis, parsing, and semantic analysis phases.
+A basic compiler implementation in C++ that supports a subset of C-like syntax. Currently implements lexical analysis, parsing, and semantic analysis phases.
 
 ## Features
 
@@ -58,7 +58,7 @@ int main() {
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/cpp-compiler.git
+git clone https://github.com/Sunsvea/coulstock-cpp-compiler.git
 cd cpp-compiler
 ```
 
@@ -152,13 +152,37 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Future Improvements
 
-- [ ] Add support for more types (float, bool)
-- [ ] Implement function calls
-- [ ] Add while loops
-- [ ] Add code generation to x86 assembly
-- [ ] Implement more operators
-- [ ] Add array support
-- [ ] Add string support
+### 1. Code Generation Phase
+- [ ] Implement x86 assembly generation
+- [ ] Add basic register allocation
+- [ ] Create proper linking phase
+- [ ] Generate executable binaries
+- [ ] Add position-independent code support
+- [ ] Implement system call interface
+
+### 2. Language Feature Expansion
+- [ ] Add while loops and for loops
+- [ ] Implement function calls and parameters
+- [ ] Add support for additional types (float, bool, string)
+- [ ] Implement arrays and pointers
+- [ ] Add struct/class support
+- [ ] Support header files and includes
+
+### 3. Optimization Phase
+- [ ] Implement constant folding
+- [ ] Add dead code elimination
+- [ ] Support common subexpression elimination
+- [ ] Add loop optimization
+- [ ] Implement function inlining
+- [ ] Add peephole optimization
+
+### 4. Enhanced Error Handling
+- [ ] Add line numbers and column information to errors
+- [ ] Implement error recovery for better error reporting
+- [ ] Add warning system with different severity levels
+- [ ] Provide source code suggestions for common mistakes
+- [ ] Add color-coded error output
+- [ ] Implement detailed error explanations
 
 ## Acknowledgments
 
