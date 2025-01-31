@@ -2,6 +2,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "utils.hpp"
+#include "semantic_analyzer.hpp"
 
 // Helper function to print the AST
 void printAST(const ASTNode *node, int indent = 0)
@@ -115,6 +116,17 @@ int main() {
         Parser parser(tokens);
         auto ast = parser.parseFunction();
         printAST(ast.get());
+
+        // Semantic Analysis
+        std::cout << "\nPerforming semantic analysis...\n";
+        SemanticAnalyzer analyzer;
+        analyzer.analyze(ast.get());
+        std::cout << "Semantic analysis completed successfully!\n";
+    }
+    catch (const SemanticError &e)
+    {
+        std::cerr << "Semantic Error: " << e.what() << std::endl;
+        return 1;
     }
     catch (const std::exception &e)
     {
@@ -123,4 +135,4 @@ int main() {
     }
 
     return 0;
-};
+}
